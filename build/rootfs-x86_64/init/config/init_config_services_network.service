@@ -1,3 +1,0 @@
-NAME=network
-CMD=/init/scripts/start_network.sh
-RESTART=on-failure
