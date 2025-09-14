@@ -17,15 +17,6 @@ static void signal_handler(int sig) {
         shutdown_requested = 1;
     }
 }
-static void mount_pseudo_filesystems(void);
-static void load_modules(void);
-
-int main() {
-    printf("Fennec OS Init System Starting\n");
-    
-    // Initialize logging
-    log_init("/init/logs/init.log");
-    log_info("Fennec OS init starting");
 static void mount_pseudo_filesystems(void) {
     log_info("Mounting pseudo filesystems");
     
@@ -49,7 +40,6 @@ static void mount_pseudo_filesystems(void) {
         log_error("Failed to mount /run: %s", strerror(errno));
     }
 }
-
 static void load_modules(void) {
     log_info("Loading kernel modules");
     
@@ -124,4 +114,11 @@ static void load_modules(void) {
     log_info("Fennec OS init shutting down");
     printf("Fennec OS Init System Shutting Down\n");
     return 0;
+}
+int main() {
+    printf("Fennec OS Init System Starting\n");
+    
+    // Initialize logging
+    log_init("/init/logs/init.log");
+    log_info("Fennec OS init starting");
 }
