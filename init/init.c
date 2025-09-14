@@ -17,6 +17,8 @@ static void signal_handler(int sig) {
         shutdown_requested = 1;
     }
 }
+static void mount_pseudo_filesystems(void);
+static void load_modules(void);
 
 int main() {
     printf("Fennec OS Init System Starting\n");
