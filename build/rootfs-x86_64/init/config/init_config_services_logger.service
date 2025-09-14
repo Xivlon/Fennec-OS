@@ -1,0 +1,3 @@
+NAME=logger
+CMD=/usr/bin/logger_service
+RESTART=on-failure

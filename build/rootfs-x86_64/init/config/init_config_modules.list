@@ -1,0 +1,7 @@
+# Core filesystem & networking modules
+ext4
+vfat
+e1000
+# Add wifi, sound, GPU modules as optional:
+# iwlwifi
+# snd_hda_intel
