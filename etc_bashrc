@@ -1,0 +1,4 @@
+# /etc/bashrc for interactive shells
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
