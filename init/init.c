@@ -75,50 +75,50 @@ static void load_modules(void) {
     fclose(f);
 }
     
+int main() {
+    printf("Fennec OS Init System Starting\n");
+
+    // Initialize logging
+    log_init("/init/logs/init.log");
+    log_info("Fennec OS init starting");
+
     // Set up signal handlers
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
-    
+
     // Main event loop
     signal(SIGCHLD, SIG_DFL); // Handle child exits
-    
+
     // Mount pseudo filesystems
     mount_pseudo_filesystems();
-    
+
     // Load kernel modules
     load_modules();
-    
+
     // Load and start services
     log_info("Loading services from /init/config/services");
     int service_count = service_load_dir("/init/config/services");
     log_info("Loaded %d services", service_count);
-    
+
     service_start_initial();
-    
+
     // Main loop - wait for signals and handle service exits
     log_info("Entering main supervision loop");
     while (!shutdown_requested) {
         int status;
         pid_t pid = waitpid(-1, &status, WNOHANG);
-        
+
         if (pid > 0) {
             service_handle_exit(pid, status);
         }
-        
+
         sleep(1);
     }
-    
+
     log_info("Shutdown requested, stopping all services");
     service_stop_all();
-    
+
     log_info("Fennec OS init shutting down");
     printf("Fennec OS Init System Shutting Down\n");
     return 0;
-}
-int main() {
-    printf("Fennec OS Init System Starting\n");
-    
-    // Initialize logging
-    log_init("/init/logs/init.log");
-    log_info("Fennec OS init starting");
 }
