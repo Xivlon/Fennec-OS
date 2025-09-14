@@ -1,0 +1,3 @@
+# /etc/profile for Fennec OS
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PS1="(fennec) \\u@\\h:\\w$ "

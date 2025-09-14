@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Fennec Minimal Package Script
+# Usage:
+#  fpkg install <name>
+#  fpkg list
+#  fpkg add-repo <url>
+
+set -euo pipefail
+DB=/var/lib/fpkg/db.txt
+REPO_LIST=/etc/fpkg/repos.list
+mkdir -p "$(dirname "$DB")" /etc/fpkg
+touch "$DB" "$REPO_LIST"
+
+cmd="${1:-help}"
+
+case "$cmd" in
+  list)
+    cat "$DB"
+    ;;
+  add-repo)
+    echo "$2" >> "$REPO_LIST"
+    ;;
+  install)
+    pkg="$2"
+    echo "Installing $pkg (placeholder)..."
+    echo "$pkg" >> "$DB"
+    ;;
+  *)
+    echo "fpkg commands: list | install <pkg> | add-repo <url>"
+    ;;
+esac
