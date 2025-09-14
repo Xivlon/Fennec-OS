@@ -49,17 +49,22 @@ Add this VS Code extension when docker feature is enabled:
 
 After the container is built and started:
 
-1. Test x86_64 build:
+1. **Run the verification script** (recommended first step):
+   ```bash
+   ./scripts/devcontainer-verify.sh
+   ```
+
+2. Test x86_64 build:
    ```bash
    make ARCH=x86_64 rootfs
    ```
 
-2. Test cross-compilation for ARM64:
+3. Test cross-compilation for ARM64:
    ```bash
    make ARCH=aarch64 rootfs
    ```
 
-3. Verify QEMU installation:
+4. Verify QEMU installation:
    ```bash
    qemu-system-x86_64 --version
    qemu-system-aarch64 --version
