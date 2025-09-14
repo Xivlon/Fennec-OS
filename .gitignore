@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+*.o
+*.tar.bz2
+*.tar.gz
+*.cpio.gz
+
+# Editor files
+*~
+.*.swp
+.*.swo
+*.orig
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+/tmp/
+*.tmp

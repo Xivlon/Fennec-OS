@@ -1,4 +1,0 @@
-NAME=sshd
-CMD=/usr/sbin/sshd -D
-RESTART=always
-AFTER=network
