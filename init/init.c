@@ -24,7 +24,6 @@ int main() {
     // Initialize logging
     log_init("/init/logs/init.log");
     log_info("Fennec OS init starting");
-=======
 static void mount_pseudo_filesystems(void) {
     log_info("Mounting pseudo filesystems");
     
