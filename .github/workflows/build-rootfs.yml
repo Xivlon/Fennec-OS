@@ -39,5 +39,7 @@ jobs:
             build/rootfs-${{ matrix.arch }}.cpio.gz
             build/fennec-init-${{ matrix.arch }}
       - name: Prepare BusyBox config
-        run: cp busybox.config build/busybox-1.36.1/.config 
-             make olddefconfig
+        run: |
+          cp busybox.config build/busybox-1.36.1/.config
+          cd build/busybox-1.36.1
+          make olddefconfig
