@@ -1,0 +1,33 @@
+{
+	"name": "Fennec OS Development Environment",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+	
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/gcc:1": {},
+		"ghcr.io/devcontainers/features/cmake:1": {},
+		"ghcr.io/devcontainers/features/python:1": {}
+	},
+
+	"postCreateCommand": [
+		"bash", "-c", 
+		"sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-system-arm gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu cpio bc flex bison libssl-dev wget curl xz-utils file rsync patch ca-certificates && echo 'Dev container setup complete!'"
+	],
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools",
+				"ms-vscode.makefile-tools", 
+				"timonwong.shellcheck",
+				"jeff-hykin.better-cpp-syntax"
+			]
+		}
+	},
+
+	"remoteUser": "vscode",
+	
+	"containerEnv": {
+		"FENNEC_DEV": "1"
+	}
+}

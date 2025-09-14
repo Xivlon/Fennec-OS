@@ -32,7 +32,9 @@ $(INIT_BIN): $(INIT_OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 rootfs: init
-	mkdir -p $(ROOTFS_DIR)/{bin,sbin,usr/bin,usr/sbin,proc,sys,dev,etc,run,init/config/services,init/logs,var/log}
+	mkdir -p $(ROOTFS_DIR)/bin $(ROOTFS_DIR)/sbin $(ROOTFS_DIR)/usr/bin $(ROOTFS_DIR)/usr/sbin
+	mkdir -p $(ROOTFS_DIR)/proc $(ROOTFS_DIR)/sys $(ROOTFS_DIR)/dev $(ROOTFS_DIR)/etc $(ROOTFS_DIR)/run
+	mkdir -p $(ROOTFS_DIR)/init/config/services $(ROOTFS_DIR)/init/logs $(ROOTFS_DIR)/var/log
 	cp $(INIT_BIN) $(ROOTFS_DIR)/sbin/init
 	# placeholder basic tools (expect busybox or toybox externally)
 	touch $(ROOTFS_DIR)/etc/profile
