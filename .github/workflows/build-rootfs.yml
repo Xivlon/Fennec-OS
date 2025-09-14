@@ -1,0 +1,40 @@
+name: Build Fennec OS RootFS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu cpio qemu-utils libssl-dev wget gzip
+
+      - name: Build rootfs
+        run: |
+            make ARCH=${{ matrix.arch }} rootfs
+
+      - name: List outputs
+        run: |
+          ls -al build
+          file build/fennec-init-${{ matrix.arch }} || true
+          ls -al build/*${{ matrix.arch }}.cpio.gz || true
+
+      - name: Upload initramfs
+        uses: actions/upload-artifact@v4
+        with:
+          name: fennec-rootfs-${{ matrix.arch }}
+          path: |
+            build/rootfs-${{ matrix.arch }}.cpio.gz
+            build/fennec-init-${{ matrix.arch }}
