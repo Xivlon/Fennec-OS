@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-09-15T21:06:55.098Z",
+  "arch": "x86_64",
+  "busybox_profile": "min",
+  "feature_set": "minimal",
+  "compression": "gzip",
+  "toolchain_fingerprint": "63115e2c58c974c5db86961ba9291b152cd234f8b73eb76fc7dd18036729d907",
+  "init_size_bytes": 903224,
+  "busybox_applet_count": 52,
+  "rootfs_uncompressed_bytes": 904744,
+  "rootfs_compressed_bytes": 399790,
+  "build_duration_seconds": 0,
+  "boot_time_seconds": 0
+}
