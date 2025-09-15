@@ -1,7 +1,6 @@
-# Fennec-OS
 ![Fennec-OS](https://github.com/Xivlon/Fennec-OS/blob/main/FennecBase.png)
 
-   # Base Operating System For Even The Weakest of Hardware
+   # Base Operating System For Even The Weakest of Hardware!
 
 ## Overview
 
