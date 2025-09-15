@@ -34,7 +34,12 @@ jobs:
         run: |
           cd build/linux-6.5
           make defconfig   # generates working .config
-
+      
+      - name: Install Kernel Headers
+        run: |
+          cd build/linux-6.5
+          make headers_install INSTALL_HDR_PATH=$(pwd)/usr
+          
       - name: Download BusyBox
         run: |
           mkdir -p build
