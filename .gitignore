@@ -3,6 +3,7 @@ build/
 *.o
 *.tar.bz2
 *.tar.gz
+*.tar.xz
 *.cpio.gz
 
 # Editor files
@@ -21,8 +22,7 @@ Thumbs.db
 
 # Temporary files
 /tmp/
-*.tmp*.tar.xz
-*.tar.xz
-*.tar.xz
-*.tar.bz2
-*.tar.xz
+*.tmp
+
+# Binary artifacts
+networking/tc
