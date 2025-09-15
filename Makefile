@@ -56,7 +56,7 @@ busybox-config: busybox-fetch
 	@if [ -d "$(BUSYBOX_SRC_DIR)" ]; then \
 		mkdir -p $(BUSYBOX_BUILD_DIR) && \
 		cp $(BUSYBOX_CONFIG) $(BUSYBOX_BUILD_DIR)/.config && \
-		$(MAKE) -C $(BUSYBOX_SRC_DIR) O=$(realpath $(BUSYBOX_BUILD_DIR)) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_PREFIX_$(ARCH)) oldconfig; \
+		$(MAKE) -C $(BUSYBOX_SRC_DIR) O=$(realpath $(BUSYBOX_BUILD_DIR)) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_PREFIX_$(ARCH)) olddefconfig; \
 	else \
 		echo "Using dummy BusyBox, skipping config"; \
 	fi
