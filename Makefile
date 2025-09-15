@@ -9,7 +9,7 @@ INIT_OBJS := $(INIT_SRC:.c=.o)
 BUSYBOX_VERSION := 1.36.1
 BUSYBOX_SRC_DIR := $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
 BUSYBOX_BUILD_DIR := $(BUILD_DIR)/busybox-build-$(ARCH)
-BUSYBOX_CONFIG := Fennec-OS/.config/busybox.config
+BUSYBOX_CONFIG := .config/busybox.config
 BUSYBOX_BIN := $(BUSYBOX_BUILD_DIR)/busybox
 
 CROSS_PREFIX_x86_64 :=
