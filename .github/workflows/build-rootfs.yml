@@ -20,6 +20,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu cpio qemu-utils libssl-dev wget gzip
+      - name: Download Linux Kernel
+        run: |
+            mkdir -p build/linux-6.5
+            cd build
+            wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.tar.xz
+            tar xf linux-6.5.tar.xz
 
       - name: Build rootfs
         run: |
