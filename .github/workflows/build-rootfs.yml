@@ -26,6 +26,16 @@ jobs:
             cd build
             wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.tar.xz
             tar xf linux-6.5.tar.xz
+      - name: Prepare kernel config
+        run: |
+          cd build/linux-6.5
+          make defconfig   # generates a working default config
+
+      - name: Prepare BusyBox config
+        run: |
+          cp busybox.config build/busybox-1.36.1/.config
+          cd build/busybox-1.36.1
+          make olddefconfig
 
       - name: Build rootfs
         run: |
