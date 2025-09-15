@@ -2,7 +2,8 @@
  * Traffic Control (tc) implementation for Fennec-OS
  * This file demonstrates CBQ (Class-Based Queueing) functionality
  */
-
+#include <linux/pkt_sched.h>
+#include <linux/tc_cbq.h>
 #include <linux/pkt_cls.h>
 #include <stdio.h>
 #include <stdlib.h>
