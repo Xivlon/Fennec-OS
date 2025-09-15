@@ -24,13 +24,20 @@ LDFLAGS := -static
 
 INIT_BIN := $(BUILD_DIR)/fennec-init-$(ARCH)
 ROOTFS_DIR := $(BUILD_DIR)/rootfs-$(ARCH)
+TC_BIN := $(BUILD_DIR)/fennec-tc-$(ARCH)
 
-all: init rootfs
+all: init tc rootfs
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 init: $(BUILD_DIR) $(INIT_BIN)
+
+tc: $(BUILD_DIR) $(TC_BIN)
+
+$(TC_BIN): networking/tc.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	$(STRIP) $@ || true
 
 $(INIT_BIN): $(INIT_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
@@ -96,9 +103,9 @@ run: rootfs
 		-initrd $(ROOTFS_DIR).cpio.gz -nographic -append "console=ttyS0"
 
 clean:
-	rm -f $(INIT_OBJS) $(INIT_BIN)
+	rm -f $(INIT_OBJS) $(INIT_BIN) $(TC_BIN)
 	rm -rf $(ROOTFS_DIR)
 	rm -rf $(BUSYBOX_BUILD_DIR)
 	rm -f $(BUILD_DIR)/rootfs-$(ARCH).cpio.gz
 
-.PHONY: all init clean rootfs run busybox-fetch busybox-config busybox-build
+.PHONY: all init tc clean rootfs run busybox-fetch busybox-config busybox-build
