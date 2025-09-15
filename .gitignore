@@ -21,4 +21,4 @@ Thumbs.db
 
 # Temporary files
 /tmp/
-*.tmp
+*.tmp*.tar.xz
