@@ -34,7 +34,12 @@ jobs:
         run: |
           cd build/linux-6.5
           make defconfig   # generates working .config
-      
+      - name: Disable CBQ
+          run: |
+            cd build/linux-6.5
+            scripts/config --disable NET_SCH_CBQ
+            make olddefconfig
+
       - name: Install Kernel Headers
         run: |
           cd build/linux-6.5
