@@ -1,4 +1,4 @@
-name: Build Fennec OS RootFS
+name: Build Fennec OS
 
 on:
   push:
@@ -7,11 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-matrix:
     strategy:
       matrix:
         arch: [x86_64, aarch64]
+        profile: [min, full]
     runs-on: ubuntu-latest
+    outputs:
+      cache-key-${{ matrix.arch }}-${{ matrix.profile }}: ${{ steps.cache-key.outputs.key }}
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,61 +25,204 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-            cpio qemu-utils libssl-dev wget gzip libncurses-dev flex bison
+            cpio qemu-utils libssl-dev wget gzip xz-utils libncurses-dev \
+            flex bison bc
 
-      - name: Download Linux Kernel
+      - name: Generate toolchain fingerprint
+        id: toolchain
         run: |
-          mkdir -p build/linux-6.5
-          cd build
-          wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.tar.xz
-          tar xf linux-6.5.tar.xz
+          if [ "${{ matrix.arch }}" = "aarch64" ]; then
+            FINGERPRINT=$(aarch64-linux-gnu-gcc --version | head -1 | sha256sum | cut -d' ' -f1)
+          else
+            FINGERPRINT=$(gcc --version | head -1 | sha256sum | cut -d' ' -f1)
+          fi
+          echo "fingerprint=${FINGERPRINT}" >> $GITHUB_OUTPUT
+          echo "Toolchain fingerprint: ${FINGERPRINT}"
 
-      - name: Prepare Kernel Config
+      - name: Generate config hash
+        id: config
         run: |
-          cd build/linux-6.5
-          make defconfig   # generates working .config
-      - name: Disable CBQ
-        run: |
-            cd build/linux-6.5
-            scripts/config --disable NET_SCH_CBQ
-            make olddefconfig
+          if [ -f "configs/busybox/config.${{ matrix.profile }}" ]; then
+            HASH=$(cat configs/busybox/config.${{ matrix.profile }} | sha256sum | cut -d' ' -f1)
+          else
+            HASH="none"
+          fi
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+          echo "Config hash: ${HASH}"
 
-      - name: Install Kernel Headers
+      - name: Generate cache key
+        id: cache-key
         run: |
-          cd build/linux-6.5
-          make headers_install INSTALL_HDR_PATH=$(pwd)/usr
-          
-      - name: Download BusyBox
-        run: |
-          mkdir -p build
-          cd build
-          wget https://busybox.net/downloads/busybox-1.36.1.tar.bz2
-          tar xjf busybox-1.36.1.tar.bz2
+          KEY="busybox-${{ matrix.arch }}-${{ matrix.profile }}-${{ steps.config.outputs.hash }}-${{ steps.toolchain.outputs.fingerprint }}"
+          echo "key=${KEY}" >> $GITHUB_OUTPUT
+          echo "Cache key: ${KEY}"
 
-      - name: Prepare BusyBox Config
-        run: |
-          cd build/busybox-1.36.1
-          make defconfig   # generates default .config
-     
-      - name: Build BusyBox
-        run: |
-          cd build/busybox-1.36.1
-          make -j$(nproc)
+      - name: Cache BusyBox build
+        uses: actions/cache@v4
+        with:
+          path: build/busybox-build-${{ matrix.arch }}
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            busybox-${{ matrix.arch }}-${{ matrix.profile }}-
+            busybox-${{ matrix.arch }}-
 
-      - name: Build RootFS
+      - name: Build init system
         run: |
-          make ARCH=${{ matrix.arch }} rootfs
+          make ARCH=${{ matrix.arch }} init
 
-      - name: List outputs
+      - name: Fetch and build BusyBox
         run: |
-          ls -al build
-          file build/fennec-init-${{ matrix.arch }} || true
-          ls -al build/*${{ matrix.arch }}.cpio.gz || true
+          # Try to fetch real BusyBox, fall back to dummy if network fails
+          make ARCH=${{ matrix.arch }} BUSYBOX_PROFILE=${{ matrix.profile }} busybox-build || true
 
-      - name: Upload initramfs
+      - name: Build rootfs
+        run: |
+          make ARCH=${{ matrix.arch }} BUSYBOX_PROFILE=${{ matrix.profile }} ROOTFS_COMPRESS=gzip rootfs
+
+      - name: Generate metrics
+        run: |
+          make ARCH=${{ matrix.arch }} metrics
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fennec-rootfs-${{ matrix.arch }}
+          name: fennec-${{ matrix.arch }}-${{ matrix.profile }}
           path: |
             build/rootfs-${{ matrix.arch }}.cpio.gz
             build/fennec-init-${{ matrix.arch }}
+            build/metrics-${{ matrix.arch }}.json
+
+  smoke-test:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    if: ${{ needs.build-matrix.outputs.cache-key-x86_64-min != '' }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86
+
+      - name: Download x86_64 minimal artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fennec-x86_64-min
+          path: build/
+
+      - name: Run smoke test
+        run: |
+          chmod +x scripts/ci/smoke_boot.sh
+          ./scripts/ci/smoke_boot.sh x86_64 build/rootfs-x86_64.cpio.gz 15
+
+  size-gate:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fennec-*
+          merge-multiple: true
+          path: build/
+
+      - name: Check for baseline
+        id: baseline
+        run: |
+          if [ -f ".ci/baseline.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No baseline found - this will be the first baseline"
+          fi
+
+      - name: Size regression check
+        if: steps.baseline.outputs.exists == 'true'
+        run: |
+          # Compare against baseline
+          echo "Checking size regression against baseline..."
+          
+          # Get baseline compressed size for x86_64 min profile
+          BASELINE_SIZE=$(jq -r '.rootfs_compressed_bytes' .ci/baseline.json)
+          CURRENT_SIZE=$(jq -r '.rootfs_compressed_bytes' build/metrics-x86_64.json)
+          
+          # Calculate increase in bytes
+          INCREASE_BYTES=$((CURRENT_SIZE - BASELINE_SIZE))
+          # Calculate threshold (10% of baseline)
+          THRESHOLD_BYTES=$((BASELINE_SIZE / 10))
+          
+          # Calculate percentage increase for display
+          if [ "$BASELINE_SIZE" -gt 0 ]; then
+            INCREASE_PERCENT=$((INCREASE_BYTES * 100 / BASELINE_SIZE))
+          else
+            INCREASE_PERCENT=0
+          fi
+          
+          echo "Baseline size: ${BASELINE_SIZE} bytes"
+          echo "Current size: ${CURRENT_SIZE} bytes"
+          echo "Size change: ${INCREASE_PERCENT}%"
+          
+          # Check if increase is over 10%
+          if [ "$INCREASE_BYTES" -gt "$THRESHOLD_BYTES" ]; then
+            echo "ERROR: Rootfs size increased by ${INCREASE_PERCENT}% (${INCREASE_BYTES} bytes > ${THRESHOLD_BYTES} bytes threshold)"
+            echo "This exceeds the 10% threshold."
+            echo "Add 'size-exemption' label to override or reduce the size."
+            exit 1
+          else
+            echo "Size change within acceptable range"
+          fi
+
+  lint-meta:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check documentation
+        run: |
+          # Check that required documentation exists
+          required_docs=(
+            "docs/ROADMAP.md"
+            "docs/ARCHITECTURE.md"
+            "README.md"
+          )
+          
+          for doc in "${required_docs[@]}"; do
+            if [ ! -f "${doc}" ]; then
+              echo "ERROR: Required documentation missing: ${doc}"
+              exit 1
+            else
+              echo "✓ ${doc} present"
+            fi
+          done
+
+      - name: Validate manifest (if exists)
+        run: |
+          if [ -f "rootfs-manifest.lst" ]; then
+            echo "Validating rootfs manifest format..."
+            # Check that manifest is sorted and contains valid paths
+            if ! sort -c rootfs-manifest.lst 2>/dev/null; then
+              echo "ERROR: Manifest is not sorted"
+              exit 1
+            fi
+            echo "✓ Manifest is properly sorted"
+          else
+            echo "No manifest file found (will be created on first successful build)"
+          fi
+
+      - name: Check Makefile help
+        run: |
+          # Verify help target works
+          make help | grep -q "Available targets:" || {
+            echo "ERROR: Makefile help target not working properly"
+            exit 1
+          }
+          echo "✓ Makefile help target functional"

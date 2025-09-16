@@ -32,24 +32,22 @@ sudo apt install qemu-system-x86 qemu-system-arm
 
 ### Building
 
-1. **Build the init system:**
-   ```bash
-   make ARCH=x86_64 init
-   ```
+**Quick start:**
+```bash
+# Build minimal x86_64 rootfs
+make ARCH=x86_64 BUSYBOX_PROFILE=min rootfs
 
-2. **Fetch and build BusyBox:**
-   ```bash
-   ./scripts/fetch_busybox.sh  # Downloads BusyBox 1.36.1
-   make ARCH=x86_64 busybox-build
-   ```
+# Build full aarch64 rootfs with XZ compression  
+make ARCH=aarch64 BUSYBOX_PROFILE=full ROOTFS_COMPRESS=xz rootfs
 
-3. **Generate root filesystem:**
-   ```bash
-   make ARCH=x86_64 rootfs
-   ```
-   This creates:
-   - `build/rootfs-x86_64/` - Root filesystem directory
-   - `build/rootfs-x86_64.cpio.gz` - Compressed initramfs
+# Debug build
+make DEBUG=1 rootfs
+
+# View all options
+make help
+```
+
+For comprehensive build instructions, see [BUILDING.md](docs/BUILDING.md).
 
 ### Testing with QEMU
 
@@ -89,9 +87,19 @@ The build automatically creates symlinks for commonly used commands:
 - **Other:** `find`, `xargs`, `chmod`, `chown`, `date`, `sync`, `kill`, `pwd`, `which`
 
 ### Customization
-- BusyBox configuration: `packages/busybox/config`
-- Version setting: `BUSYBOX_VERSION` in `Makefile`
-- Applet selection: Modify the symlink loop in the rootfs target
+
+**BusyBox Profiles:**
+- `BUSYBOX_PROFILE=min` - Essential utilities only (~40-50 applets)
+- `BUSYBOX_PROFILE=full` - Comprehensive toolset (~100+ applets)
+
+**Compression Options:**
+- `ROOTFS_COMPRESS=gzip` - Fast, widely supported (default)
+- `ROOTFS_COMPRESS=xz` - Better compression ratio
+
+**Configuration:**
+- Profile configs: `configs/busybox/config.{min,full}`
+- Version/hash verification built into build system  
+- Deterministic builds with toolchain fingerprinting
 
 ## Init System
 
@@ -130,20 +138,20 @@ Fennec-OS/
 ```
 
 ### Build Targets
+- `make help` - Show all available targets and options
 - `make init` - Build init system only
-- `make busybox-fetch` - Download BusyBox source
-- `make busybox-config` - Configure BusyBox
-- `make busybox-build` - Build BusyBox
+- `make busybox-build` - Fetch and build BusyBox  
 - `make rootfs` - Build complete root filesystem
+- `make metrics` - Generate and display build metrics
 - `make clean` - Clean build artifacts
 
 ### Cross-compilation
 ```bash
 # For aarch64
-make ARCH=aarch64 rootfs
+make ARCH=aarch64 BUSYBOX_PROFILE=min rootfs
 
-# For custom toolchain prefix
-make ARCH=custom CROSS_PREFIX_custom=my-toolchain- rootfs
+# For RISC-V (experimental)
+make ARCH=riscv64 BUSYBOX_PROFILE=min rootfs
 ```
 
 ## Package Management
