@@ -80,7 +80,7 @@ if [ ! -f "${KERNEL_PATH}" ]; then
     TEMP_DIR=$(mktemp -d)
     cd "${TEMP_DIR}"
     
-    if [[ "${ROOTFS_FILE}" == *.xz ]]; then
+    if [ "${ROOTFS_FILE##*.}" = "xz" ]; then
         xz -dc "${OLDPWD}/${ROOTFS_FILE}" | cpio -i 2>/dev/null
     else
         gzip -dc "${OLDPWD}/${ROOTFS_FILE}" | cpio -i 2>/dev/null
