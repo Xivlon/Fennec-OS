@@ -127,9 +127,9 @@ if [ -f "build/metrics-x86_64.json" ]; then
     APPLET_COUNT=$(grep '"busybox_applet_count"' build/metrics-x86_64.json | cut -d: -f2 | tr -d ' ,')
     COMPRESSED_SIZE=$(grep '"rootfs_compressed_bytes"' build/metrics-x86_64.json | cut -d: -f2 | tr -d ' ,')
     
-    echo "Init binary size: $(printf "%'d" ${INIT_SIZE}) bytes"
+    echo "Init binary size: ${INIT_SIZE} bytes"
     echo "BusyBox applets: ${APPLET_COUNT}"
-    echo "Compressed rootfs: $(printf "%'d" ${COMPRESSED_SIZE}) bytes"
+    echo "Compressed rootfs: ${COMPRESSED_SIZE} bytes"
     
     # Basic sanity checks
     if [ ${INIT_SIZE} -lt 50000 ]; then
