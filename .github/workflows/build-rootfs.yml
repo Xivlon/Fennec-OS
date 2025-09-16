@@ -153,16 +153,25 @@ jobs:
           BASELINE_SIZE=$(jq -r '.rootfs_compressed_bytes' .ci/baseline.json)
           CURRENT_SIZE=$(jq -r '.rootfs_compressed_bytes' build/metrics-x86_64.json)
           
-          # Calculate percentage increase
-          INCREASE=$(echo "scale=1; (${CURRENT_SIZE} - ${BASELINE_SIZE}) * 100 / ${BASELINE_SIZE}" | bc)
+          # Calculate increase in bytes
+          INCREASE_BYTES=$((CURRENT_SIZE - BASELINE_SIZE))
+          # Calculate threshold (10% of baseline)
+          THRESHOLD_BYTES=$((BASELINE_SIZE / 10))
+          
+          # Calculate percentage increase for display
+          if [ "$BASELINE_SIZE" -gt 0 ]; then
+            INCREASE_PERCENT=$((INCREASE_BYTES * 100 / BASELINE_SIZE))
+          else
+            INCREASE_PERCENT=0
+          fi
           
           echo "Baseline size: ${BASELINE_SIZE} bytes"
           echo "Current size: ${CURRENT_SIZE} bytes"
-          echo "Size change: ${INCREASE}%"
+          echo "Size change: ${INCREASE_PERCENT}%"
           
           # Check if increase is over 10%
-          if (( $(echo "${INCREASE} > 10" | bc -l) )); then
-            echo "ERROR: Rootfs size increased by ${INCREASE}% (>${BASELINE_SIZE} bytes)"
+          if [ "$INCREASE_BYTES" -gt "$THRESHOLD_BYTES" ]; then
+            echo "ERROR: Rootfs size increased by ${INCREASE_PERCENT}% (${INCREASE_BYTES} bytes > ${THRESHOLD_BYTES} bytes threshold)"
             echo "This exceeds the 10% threshold."
             echo "Add 'size-exemption' label to override or reduce the size."
             exit 1
