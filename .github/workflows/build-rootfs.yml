@@ -95,7 +95,7 @@ jobs:
   smoke-test:
     needs: build-matrix
     runs-on: ubuntu-latest
-    if: ${{ contains(needs.build-matrix.outputs.*, 'x86_64-min') }}
+    if: ${{ needs.build-matrix.outputs.cache-key-x86_64-min != '' }}
     
     steps:
       - name: Checkout
