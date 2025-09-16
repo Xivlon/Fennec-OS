@@ -13,6 +13,10 @@ BUILD_DIR="build"
 ROOTFS_DIR="${BUILD_DIR}/rootfs-${ARCH}"
 INIT_BIN="${BUILD_DIR}/fennec-init-${ARCH}"
 BUSYBOX_BIN="${BUILD_DIR}/busybox-build-${ARCH}/busybox"
+printf_commas() {
+    awk '{printf "%'\''d\n", $1}' <<<"$1" 2>/dev/null || \
+    awk '{printf "%d\n", $1}' <<<"$1"
+}
 
 # Get current timestamp
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
@@ -112,8 +116,8 @@ echo "Feature Set: ${FEATURE_SET}"
 echo "Compression: ${ROOTFS_COMPRESS}"
 echo "Init Binary Size: $(printf "%'d" ${INIT_SIZE}) bytes"
 echo "BusyBox Applets: ${BUSYBOX_APPLET_COUNT}"
-echo "RootFS Uncompressed: $(printf "%'d" ${ROOTFS_UNCOMPRESSED_SIZE}) bytes ($(echo "scale=1; ${ROOTFS_UNCOMPRESSED_SIZE}/1024/1024" | bc)MB)"
-echo "RootFS Compressed: $(printf "%'d" ${ROOTFS_COMPRESSED_SIZE}) bytes ($(echo "scale=1; ${ROOTFS_COMPRESSED_SIZE}/1024/1024" | bc)MB)"
+echo "RootFS Uncompressed: $(printf_commas "${ROOTFS_UNCOMPRESSED_SIZE}") bytes ($(bc <<< "scale=1; ${ROOTFS_UNCOMPRESSED_SIZE}/1024/1024") MB)"
+echo "RootFS Compressed:   $(printf_commas "${ROOTFS_COMPRESSED_SIZE}") bytes ($(bc <<< "scale=1; ${ROOTFS_COMPRESSED_SIZE}/1024/1024") MB)"
 if [ "${ROOTFS_UNCOMPRESSED_SIZE}" -gt 0 ]; then
     COMPRESSION_RATIO=$(echo "scale=1; ${ROOTFS_COMPRESSED_SIZE}*100/${ROOTFS_UNCOMPRESSED_SIZE}" | bc)
     echo "Compression Ratio: ${COMPRESSION_RATIO}%"
